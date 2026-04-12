@@ -1,20 +1,9 @@
-# Dashboard
 streamlit
-
-# Data & Finance
 yfinance
-pandas==2.1.4
-
-# Technical Analysis
+pandas
 ta
-
-# Charts
 plotly
-
-# News / RSS
-feedparser==6.0.11
-
-# Utilities
+feedparser
 requests
 python-dateutil
 pytz
