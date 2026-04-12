@@ -10,8 +10,10 @@ from config.settings import DB_PATH
 
 def get_connection():
     """Return a SQLite connection to the database."""
+    import os
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row  # allows dict-like access to rows
+    conn.row_factory = sqlite3.Row
     return conn
 
 
