@@ -268,3 +268,79 @@ RSI_ZONES = {
 DEFAULT_PERIOD_DAYS = 365       # How many days of history to fetch by default
 MIN_DAYS_FOR_SMA200 = 220       # Minimum data points needed to compute SMA200
 DB_PATH = "data/thai_stocks.db" # SQLite database file path
+
+# =============================================================================
+# HORIZON CONFIG — ระยะเวลาการลงทุน
+# =============================================================================
+
+HORIZON_CONFIG = {
+    "short": {
+        "label":              "📅 ระยะสั้น (1–10 วัน)",
+        "emphasize":          ["rsi", "macd", "volume"],
+        "de_emphasize":       ["sma200"],
+        "atr_buy_mult":       [0.3, 0.6, 1.0],
+        "atr_sell_mult":      [0.3, 0.6, 1.0],
+        "atr_invalid_mult":   1.0,
+        "validation_horizon": 5,
+        "guidance": (
+            "ระยะสั้น: RSI และ MACD มีความสำคัญมากกว่า SMA200 "
+            "ควรระวัง noise และ false signal — "
+            "ช่วงราคาวางแผนแคบกว่าระยะยาว"
+        ),
+        "risk_note": (
+            "ระยะสั้นมีความเสี่ยงสูง — "
+            "ราคาอาจแกว่งได้มากใน 1-2 วัน "
+            "และ transaction cost มีผลต่อผลตอบแทนมากกว่า"
+        ),
+        "indicator_note": (
+            "เน้น: RSI, MACD, Volume | "
+            "ลดความสำคัญ: SMA200 (ระยะยาวเกินไป)"
+        ),
+    },
+    "medium": {
+        "label":              "📆 ระยะกลาง (2–8 สัปดาห์)",
+        "emphasize":          ["trend", "macd", "volume"],
+        "de_emphasize":       [],
+        "atr_buy_mult":       [0.5, 1.0, 1.5],
+        "atr_sell_mult":      [0.5, 1.0, 2.0],
+        "atr_invalid_mult":   1.5,
+        "validation_horizon": 15,
+        "guidance": (
+            "ระยะกลาง: EMA alignment และ trend มีความสำคัญ "
+            "รอสัญญาณยืนยันจากหลาย indicator ก่อนตัดสินใจ — "
+            "ช่วงราคาวางแผนกว้างกว่าระยะสั้น"
+        ),
+        "risk_note": (
+            "ต้องทนต่อความผันผวนระหว่างทาง "
+            "และติดตามข่าวสารเป็นระยะ "
+            "macro events อาจเปลี่ยนทิศทางได้"
+        ),
+        "indicator_note": (
+            "เน้น: EMA Trend, MACD, Volume | "
+            "ใช้ทุก indicator ประกอบ"
+        ),
+    },
+    "long": {
+        "label":              "🗓️ ระยะยาว (3–12 เดือน)",
+        "emphasize":          ["trend", "sma200", "volatility"],
+        "de_emphasize":       ["rsi", "macd"],
+        "atr_buy_mult":       [1.0, 2.0, 3.0],
+        "atr_sell_mult":      [1.0, 2.0, 4.0],
+        "atr_invalid_mult":   3.0,
+        "validation_horizon": 60,
+        "guidance": (
+            "ระยะยาว: SMA200 และ trend หลักมีความสำคัญที่สุด "
+            "RSI และ MACD ระยะสั้นมีความสำคัญน้อยกว่า — "
+            "ช่วงราคาวางแผนกว้างที่สุด"
+        ),
+        "risk_note": (
+            "ต้องพร้อมรับมือการเปลี่ยนแปลง macro และ fundamental "
+            "ของบริษัทในระยะยาว "
+            "ราคาอาจผันผวนมากก่อนถึงเป้าหมาย"
+        ),
+        "indicator_note": (
+            "เน้น: SMA200, EMA Trend, ATR | "
+            "ลดความสำคัญ: RSI, MACD (noise ระยะสั้น)"
+        ),
+    },
+}

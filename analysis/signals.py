@@ -352,9 +352,9 @@ def run_all_signals(symbol: str, ind: dict, recent_macro_tags: list[str] = None)
 
 def compute_trading_recommendation(ind: dict, signals: dict, confidence: dict) -> dict:
     """
-    คำนวณคำแนะนำการซื้อขายแบบ rule-based
+    คำนวณช่วงราคาสำหรับวางแผน (ไม่ใช่คำแนะนำซื้อขาย)
     ใช้ ATR เป็นหน่วยวัดระยะราคา
-    ไม่ใช้ AI — ทุก rule อธิบายได้จากตัวเลขบน chart
+    ทุก rule อธิบายได้จากตัวเลขบน chart
     """
     close = ind.get("close")
     atr   = ind.get("atr")
@@ -370,7 +370,7 @@ def compute_trading_recommendation(ind: dict, signals: dict, confidence: dict) -
     bear_count = confidence.get("bearish_count", 0)
     total      = bull_count + bear_count
 
-    # --- % ความเชื่อมั่น ---
+    # --- สัดส่วนสัญญาณ (ไม่ใช่ probability) ---
     if total == 0:
         up_pct   = 50.0
         down_pct = 50.0
@@ -378,48 +378,47 @@ def compute_trading_recommendation(ind: dict, signals: dict, confidence: dict) -
         up_pct   = round((bull_count / total) * 100, 1)
         down_pct = round((bear_count / total) * 100, 1)
 
-    # --- ควรซื้อหรือขาย ---
-    should_buy  = dominant == "BULLISH"  and conf_level in ["MEDIUM", "HIGH"]
-    should_sell = dominant == "BEARISH"  and conf_level in ["MEDIUM", "HIGH"]
+    # --- ทิศทางที่ระบบตรวจพบ (ไม่ใช่คำสั่งซื้อขาย) ---
+    system_sees_bullish = dominant == "BULLISH" and conf_level in ["MEDIUM", "HIGH"]
+    system_sees_bearish = dominant == "BEARISH" and conf_level in ["MEDIUM", "HIGH"]
 
-    # --- ราคาซื้อเป็นขั้นบันได (3 ระดับ) ---
-    # ใช้ ATR เป็นตัวกำหนดระยะห่างแต่ละขั้น
-    buy_levels = [
-        round(close - (atr * 0.5), 2),   # ขั้นที่ 1: ใกล้ราคาปัจจุบัน
-        round(close - (atr * 1.0), 2),   # ขั้นที่ 2: ต่ำกว่า 1 ATR
-        round(close - (atr * 1.5), 2),   # ขั้นที่ 3: ต่ำกว่า 1.5 ATR
+    # --- ช่วงราคาพิจารณาซื้อ (3 ระดับ) ---
+    # ใช้ ATR กำหนดระยะห่าง — เป็นช่วงวางแผนเท่านั้น
+    buy_zones = [
+        round(close - (atr * 0.5), 2),   # ระดับที่ 1: ใกล้ราคาปัจจุบัน
+        round(close - (atr * 1.0), 2),   # ระดับที่ 2: ต่ำกว่า 1 ATR
+        round(close - (atr * 1.5), 2),   # ระดับที่ 3: ต่ำกว่า 1.5 ATR
     ]
 
-    # --- ราคาขายเป็นขั้นบันได (3 ระดับ) ---
-    # ใช้ EMA เป็น resistance + ATR เป็นระยะ
+    # --- ช่วงราคาพิจารณาขาย (3 ระดับ) ---
     sell_target1 = ema20 if ema20 and ema20 > close else round(close + (atr * 0.5), 2)
     sell_target2 = ema50 if ema50 and ema50 > close else round(close + (atr * 1.0), 2)
     sell_target3 = round(close + (atr * 2.0), 2)
 
-    sell_levels = [
+    sell_zones = [
         round(sell_target1, 2),
         round(sell_target2, 2),
         round(sell_target3, 2),
     ]
 
-    # --- Stop Loss ---
-    # Rule: ต่ำกว่าราคาปัจจุบัน 1.5x ATR (หรือ EMA50 แล้วแต่อะไรต่ำกว่า)
-    stop_loss_atr  = round(close - (atr * 1.5), 2)
-    stop_loss_ema  = round(ema50 - (atr * 0.5), 2) if ema50 else stop_loss_atr
-    stop_loss      = min(stop_loss_atr, stop_loss_ema)
+    # --- แนว Invalidation (แทน Stop Loss) ---
+    # ถ้าราคาต่ำกว่านี้ = thesis เสีย ควรทบทวนสถานะ
+    invalidation_atr = round(close - (atr * 1.5), 2)
+    invalidation_ema = round(ema50 - (atr * 0.5), 2) if ema50 else invalidation_atr
+    invalidation     = min(invalidation_atr, invalidation_ema)
 
     return {
-        "should_buy":   should_buy,
-        "should_sell":  should_sell,
-        "dominant":     dominant,
-        "conf_level":   conf_level,
-        "up_pct":       up_pct,
-        "down_pct":     down_pct,
-        "buy_levels":   buy_levels,
-        "sell_levels":  sell_levels,
-        "stop_loss":    stop_loss,
-        "atr_used":     round(atr, 2),
-        "close":        close,
+        "system_sees_bullish": system_sees_bullish,
+        "system_sees_bearish": system_sees_bearish,
+        "dominant":            dominant,
+        "conf_level":          conf_level,
+        "up_pct":              up_pct,
+        "down_pct":            down_pct,
+        "buy_zones":           buy_zones,
+        "sell_zones":          sell_zones,
+        "invalidation":        invalidation,
+        "atr_used":            round(atr, 2),
+        "close":               close,
     }
 # =============================================================================
 # MAIN

@@ -767,6 +767,51 @@ else:
 
             st.markdown("---")
 
+            # Signal Hit Rates Table
+            st.markdown("#### Hit Rate ต่อ Signal (horizon = 5 วัน)")
+            st.caption(
+                "⚠️ ตัวเลขนี้วัดจากอดีตเท่านั้น "
+                "ไม่ใช่การพยากรณ์อนาคต — "
+                "ประสิทธิภาพจริงอาจแตกต่างจากนี้มาก"
+            )
+
+            SIGNAL_NAME_TH = {
+                "sig_trend_BULLISH":        "Trend: Bullish",
+                "sig_trend_BEARISH":        "Trend: Bearish",
+                "sig_trend_STRONG_BULLISH": "Trend: Strong Bullish",
+                "sig_rsi_OVERSOLD":         "RSI: Oversold",
+                "sig_rsi_OVERBOUGHT":       "RSI: Overbought",
+                "sig_macd_BULLISH":         "MACD: Bullish",
+                "sig_macd_BEARISH":         "MACD: Bearish",
+            }
+
+            val_rows = []
+            for key, val in val_results.get("signals", {}).items():
+                overall  = val.get("overall", {})
+                trending = val.get("trending", {})
+                ranging  = val.get("ranging", {})
+
+                if not overall.get("available"):
+                    continue
+
+                val_rows.append({
+                    "สัญญาณ":            SIGNAL_NAME_TH.get(key, key),
+                    "Hit Rate (ทั้งหมด)": f"{overall.get('hit_rate',0):.0f}%",
+                    "Avg Return":        f"{overall.get('avg_return',0):+.2f}%",
+                    "Hit Rate (Trend)":  f"{trending.get('hit_rate',0):.0f}%" if trending.get("available") else "N/A",
+                    "Hit Rate (Range)":  f"{ranging.get('hit_rate',0):.0f}%" if ranging.get("available") else "N/A",
+                    "Sample (n)":        overall.get("sample_size", 0),
+                })
+
+            if val_rows:
+                st.dataframe(
+                    pd.DataFrame(val_rows),
+                    use_container_width=True,
+                    hide_index=True,
+                )
+            else:
+                st.info("ข้อมูลไม่เพียงพอสำหรับการแสดงผล")
+
             # Signal Decay Chart
             st.markdown("---")
             # --- Hit Rate Table ปรับปรุงใหม่ ---
@@ -795,8 +840,6 @@ else:
 | Metric | ความหมาย |
 |--------|---------|
 | **Hit Rate** | % ครั้งที่ราคาไปทิศที่สัญญาณคาด |
-| **Hit (Trend)** | % ครั้งที่ราคาไปทิศที่สัญญาณคาด ในช่วงตลาดขาขึ้น|
-| **Hit (Range)** | % ครั้งที่ราคาไปทิศที่สัญญาณคาด ในช่วงตลาดSideway|
 | **Avg(ถูก)** | ผลตอบแทนเฉลี่ยเฉพาะครั้งที่ทำนายถูก |
 | **Avg(ผิด)** | ผลตอบแทนเฉลี่ยเฉพาะครั้งที่ทำนายผิด |
 | **Profit Factor** | กำไรรวม ÷ ขาดทุนรวม (>1 = คุ้มค่า, ∞ = ไม่มีขาดทุนเลย) |
