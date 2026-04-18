@@ -590,7 +590,7 @@ with tab_gl:
                         st.caption(f"keywords: {', '.join(keywords)}")
                     if tags:
                         st.caption(
-                            f"macro tags: {', '.join(t for t in tags if t)}"
+                            f"macro tags: {', '.join(str(t) for t in tags if t and isinstance(t, str))}"
                         )
                     st.markdown("---")
                     for sub in summary.get("items", []):
